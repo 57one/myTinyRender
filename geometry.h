@@ -11,6 +11,20 @@ public:
     Vec() { for(int i = DimRow-1; i>=0; i--) data[i]=T(); }
     T& operator[](const int i) { assert(i<DimRow && i>=0); return data[i]; }
     const T& operator[](const int i) const { assert(i<DimRow && i>=0); return data[i]; }
+    double norm() { 
+        double res = 0.0;
+        for(int i = 0; i<DimRow ;i++) res += data[i] * data[i];
+        return std::sqrt(res); 
+    }
+    Vec<DimRow, T> normalize() { *this = (*this)*(1/norm()); return *this; }
+    // attention this method is just get the last value to 1 (data[DimRow-1] = 1)
+    // i cant think of a better name =,=
+    Vec<DimRow, T> homogeneous() { 
+        Vec<DimRow, T> res;
+        for(int i=0; i<DimRow-1; i++) res[i] = data[i] / data[DimRow-1];
+        res[DimRow-1] = T(1);
+        return res;
+    }
 private:
     T data[DimRow];
 };
@@ -69,7 +83,7 @@ template<int DimRow, typename T> Vec<DimRow, T> operator-(Vec<DimRow, T> lhs, co
     return lhs;
 }
 
-template<int NewLen, int DimRow, typename T> Vec<NewLen,T> embed(Vec<DimRow, T> &v, T fill = 1){
+template<int NewLen, int DimRow, typename T> Vec<NewLen,T> embed(const Vec<DimRow, T> &v, T fill = 1){
     Vec<NewLen, T> res;
     for(int i = NewLen-1; i>=0; i--)
         res[i] = i<DimRow? v[i] : fill;
@@ -111,6 +125,13 @@ public:
         return data[i];
     }
 
+    const Vec<DimRow, T> col(const int j) const{
+        assert(j<DimCol && j>=0);
+        Vec<DimRow, T> res;
+        for(int i = 0; i<DimRow; i++) res[i] = data[i][j];
+        return res;
+    }
+
     Mat<DimRow, DimCol, T> transpose(){
         Mat<DimCol, DimRow, T> res;
         for(int i = 0; i<DimCol; i++)
@@ -121,7 +142,21 @@ public:
 
 };
 
-template<int DimRow, int DimCol, typename T> std::ostream& operator<<(std::ostream& out, Mat<DimRow, DimCol, T> mat){
+template<int DimRow, int DimCol, typename T> Vec<DimRow, T> operator*(const Mat<DimRow, DimCol, T> &matrix, const Vec<DimCol, T> &vec){
+    Vec<DimRow, T> res;
+    for(int i = 0; i<DimRow; i++) res[i] = matrix[i] * vec;
+    return res;
+}
+
+template<int m, int n, int t, typename T> Mat<m, t, T> operator*(const Mat<m, n, T> &lhs, const Mat<n, t, T> &rhs){
+    Mat<m, t, T> res;
+    for(int i = 0; i<m; i++)
+        for(int j = 0; j<t; j++)
+            res[i][j] = lhs[i] * rhs.col(j);
+    return res;
+}
+
+template<int DimRow, int DimCol, typename T> std::ostream& operator<<(std::ostream& out, Mat<DimRow, DimCol, T> &mat){
     for(int i = 0; i<DimRow; i++)
         out << mat[i];
     out << std::endl;

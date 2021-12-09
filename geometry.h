@@ -127,4 +127,11 @@ template<int DimRow, int DimCol, typename T> std::ostream& operator<<(std::ostre
     return out;
 }
 
+typedef Vec<2, float> Vec2f;
+typedef Vec<2, int> Vec2i;
+typedef Vec<3, float> Vec3f;
+typedef Vec<3, int> Vec3i;
+typedef Vec<4, float> Vec4f;
+typedef Mat<4, 4, float> Matrix4f;
+
 #endif

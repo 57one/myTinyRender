@@ -51,7 +51,6 @@ public:
     T x, y, z;
 };
 
-
 template<int DimRow, typename T> T operator*(const Vec<DimRow, T> &lhs, const Vec<DimRow, T> &rhs){
     T res = T();
     for(int i = DimRow-1; i>=0; i--)
@@ -71,6 +70,12 @@ template<int DimRow, typename T> Vec<DimRow, T> operator/(Vec<DimRow, T> lhs, co
     return lhs;
 }
 
+template<int DimRow, typename T> Vec<DimRow, T> operator/(Vec<DimRow, T> lhs, T rhs){
+    for(int i = DimRow-1; i>=0; i--)
+        lhs[i] /= rhs;
+    return lhs;
+}
+
 template<int DimRow, typename T> Vec<DimRow, T> operator+(Vec<DimRow, T> lhs, const Vec<DimRow, T> rhs){
     for(int i = DimRow-1; i>=0; i--)
         lhs[i] += rhs[i];
@@ -83,10 +88,17 @@ template<int DimRow, typename T> Vec<DimRow, T> operator-(Vec<DimRow, T> lhs, co
     return lhs;
 }
 
-template<int NewLen, int DimRow, typename T> Vec<NewLen,T> embed(const Vec<DimRow, T> &v, T fill = 1){
+template<int NewLen, int DimRow, typename T> Vec<NewLen, T> embed(const Vec<DimRow, T> &v, T fill = 1){
     Vec<NewLen, T> res;
     for(int i = NewLen-1; i>=0; i--)
         res[i] = i<DimRow? v[i] : fill;
+    return res;
+}
+
+template<int NewLen, int DimRow, typename T> Vec<NewLen, T> proj(const Vec<DimRow, T> &v){
+    assert(NewLen <= DimRow);
+    Vec<NewLen, T> res;
+    for(int i = NewLen-1; i>=0; i--) res[i] = v[i];
     return res;
 }
 

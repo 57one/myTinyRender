@@ -23,7 +23,12 @@ Model::Model(const char *filename){
             Vec3f vt;
             iss >> vt[0] >> vt[1] >> vt[2];
             uv_.push_back(vt);
-        }else if(!line.compare(0, 2, "f ")){
+        } else if(!line.compare(0, 3, "vn ")){
+            iss >> trash >> trash;
+            Vec3f norm;
+            iss >> norm[0] >> norm[1] >> norm[2];
+            norms_.push_back(norm);
+        } else if(!line.compare(0, 2, "f ")){
             std::vector<Vec3i> face;
             Vec3i temp;
             iss >> trash;
@@ -51,6 +56,10 @@ Vec3f Model::vert(int i){
     return verts_[i];
 }
 
+Vec3f Model::vert(int iface, int nthvert){
+    return verts_[faces_[iface][nthvert][0]];
+}
+
 std::vector<int> Model::face(int i){
     std::vector<int> vertexs;
     for(int k = 0; k<faces_[i].size(); k++) vertexs.push_back(faces_[i][k][0]);
@@ -59,4 +68,8 @@ std::vector<int> Model::face(int i){
 
 Vec3f Model::uv(int iface, int nthvert){
     return uv_[faces_[iface][nthvert][1]];
+}
+
+Vec3f Model::normal(int iface, int nthvert){
+    return norms_[faces_[iface][nthvert][2]];
 }

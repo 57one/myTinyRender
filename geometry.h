@@ -113,6 +113,25 @@ template<int DimRow, typename T> std::ostream& operator<<(std::ostream& out, con
     return out;
 }
 
+//c++ template is useful for calculating
+//calculate determinant iteratively,more concisely,it is recursive
+template<int Dim, typename T> class dt{  //determinant
+public:
+    static T det(const Mat<Dim, Dim, T> &mat){
+        T res = 0;
+        for(int i = 0; i<Dim; i++) res += mat[0][i] * mat.cofactor(0, i);
+        return res;
+    }
+};
+
+//define the base case
+template<typename T> class dt<1, T>{
+public:
+    static T det(const Mat<1, 1, T> &mat){
+        return mat[0][0];
+    }
+};
+
 template<int DimRow, int DimCol, typename T> class Mat {
 private:
     Vec<DimCol, T> data[DimRow];
@@ -144,6 +163,15 @@ public:
         return res;
     }
 
+    const void set_col(const int col, const Vec<DimRow, T> &v){
+        assert(col<DimCol && col>=0);
+        for(int i = 0; i<DimRow; i++) data[i][col] = v[i];
+    }
+
+    T det() const { //determinant
+        return dt<DimCol, T>::det(*this);
+    }
+
     Mat<DimRow, DimCol, T> transpose(){
         Mat<DimCol, DimRow, T> res;
         for(int i = 0; i<DimCol; i++)
@@ -152,6 +180,49 @@ public:
         return res;
     }
 
+    Mat<DimRow-1, DimCol-1, T> get_minor(int row, int col) const { // delete one row and one column from matrix
+        Mat<DimRow-1, DimCol-1, T> res;
+        for(int i = 0; i<DimRow-1; i++)
+            for(int j = 0; j<DimCol-1; j++)
+                res[i][j] = data[i<row? i : i+1][j<col? j : j+1];
+        return res;
+    }
+
+    T cofactor(int row, int col) const { // M_{ij} Algebraic cofactor
+        return get_minor(row, col).det() * ((row + col) % 2? -1 : 1);
+    }
+
+    // T cofactor(size_t row, size_t col) const {
+    //     return get_minor(row,col).det()*((row+col)%2 ? -1 : 1);
+    // }
+
+    Mat<DimRow, DimCol, T> adjugate() const { //A* adjugate matrix
+        Mat<DimRow, DimCol, T> res;
+        for(int i = 0; i<DimRow; i++)
+            for(int j = 0; j<DimCol; j++)
+                res[i][j] = cofactor(j, i);
+        return res;
+    }
+
+    // mat<DimRows,DimCols,T> adjugate() const {  // A*
+    //     mat<DimRows,DimCols,T> ret;
+    //     for (size_t i=DimRows; i--; )
+    //         for (size_t j=DimCols; j--; ret[i][j]=cofactor(i,j));
+    //     return ret;
+    // }
+
+    Mat<DimRow, DimCol, T> invert() {   // A.invert = A* / |A|
+        assert(DimRow == DimCol);
+        Mat<DimRow, DimCol, T> res = adjugate();
+        res = res / (res.col(0) * data[0]);
+        return res;
+    }
+
+    // mat<DimRows,DimCols,T> invert_transpose() { // A.invert = A* / |A|
+    //     mat<DimRows,DimCols,T> ret = adjugate();
+    //     T tmp = ret[0]*rows[0];
+    //     return ret/tmp;
+    // }
 };
 
 template<int DimRow, int DimCol, typename T> Vec<DimRow, T> operator*(const Mat<DimRow, DimCol, T> &matrix, const Vec<DimCol, T> &vec){
@@ -173,6 +244,12 @@ template<int DimRow, int DimCol, typename T> std::ostream& operator<<(std::ostre
         out << mat[i];
     out << std::endl;
     return out;
+}
+
+template<int DimRow, int DimCol, typename T> Mat<DimRow, DimCol, T> operator/(Mat<DimRow, DimCol, T> lhs, const T& rhs){
+    for(int i = 0; i<DimRow; i++)
+        lhs[i] = lhs[i] / rhs;
+    return lhs;
 }
 
 typedef Vec<2, float> Vec2f;

@@ -19,6 +19,6 @@ Learn from [tinyrenderer](https://github.com/ssloy/tinyrenderer)
 git clone git@github.com:57one/myTinyRender.git &&
 cd myTinyRender &&
 make &&
-./main.ex
+./main.exe
 ```
 

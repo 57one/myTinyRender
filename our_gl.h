@@ -7,6 +7,7 @@
 extern Matrix4f ModelView;
 extern Matrix4f Projection;
 extern Matrix4f ViewPort;
+const float depth = 2000.f;
 
 void lookat(Vec3f eye, Vec3f center, Vec3f up);
 void projection(float coff);
@@ -19,7 +20,7 @@ public:
     virtual bool fragmentShader(Vec3f baryCoordinate, TGAColor &color) = 0;
 };
 
-void triangle(Vec4f *pts, IShader &shader, TGAImage &image, TGAImage &zbuffer);
+void triangle(Vec4f *pts, IShader &shader, TGAImage &image, float *zbuffer);
 Vec3f barycentric(Vec3f *pts,Vec3f P);
 
 #endif

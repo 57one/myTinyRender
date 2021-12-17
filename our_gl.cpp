@@ -26,15 +26,26 @@ void projection(float coff){
     Projection[3][2] = coff;
 }
 
+// void viewportDepth(int x, int y, int w, int h){
+//     ViewPort = Matrix4f::identity();
+//     ViewPort[0][3] = x+w/2.f;
+//     ViewPort[1][3] = y+h/2.f;
+//     ViewPort[2][3] = 255.f/2.f;
+
+//     ViewPort[0][0] = w/2.f;
+//     ViewPort[1][1] = h/2.f;
+//     ViewPort[2][2] = 255.f/2.f;
+// }
+
 void viewport(int x, int y, int w, int h){
     ViewPort = Matrix4f::identity();
     ViewPort[0][3] = x+w/2.f;
     ViewPort[1][3] = y+h/2.f;
-    ViewPort[2][3] = 255.f/2.f;
+    ViewPort[2][3] = depth/2.f;
 
     ViewPort[0][0] = w/2.f;
     ViewPort[1][1] = h/2.f;
-    ViewPort[2][2] = 255.f/2.f;
+    ViewPort[2][2] = depth/2.f;
 }
 
 Vec3f barycentric(Vec3f *pts,Vec3f P) {
@@ -47,7 +58,7 @@ Vec3f barycentric(Vec3f *pts,Vec3f P) {
     return Vec3f(-1,1,1);
 }
 
-void triangle(Vec4f *pts, IShader &shader, TGAImage &image, TGAImage &zbuffer){
+void triangle(Vec4f *pts, IShader &shader, TGAImage &image, float *zbuffer) {
      //bounding box
     Vec2f bboxmin(std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
     Vec2f bboxmax(-std::numeric_limits<float>::max(),-std::numeric_limits<float>::max());
@@ -55,8 +66,8 @@ void triangle(Vec4f *pts, IShader &shader, TGAImage &image, TGAImage &zbuffer){
     //calcuate bounding box
     for(int i=0;i<3;i++){
         for(int j=0;j<2;j++){
-            bboxmin[j]=std::min(bboxmin[j],pts[i][j] / pts[i][3]);
-            bboxmax[j]=std::max(bboxmax[j],pts[i][j] / pts[i][3]);
+            bboxmin[j]=std::max(0.0f,std::min(bboxmin[j],pts[i][j] / pts[i][3]));
+            bboxmax[j]=std::min(clamp[j],std::max(bboxmax[j], pts[i][j] / pts[i][3]));
         }
     }
     Vec3i P;
@@ -69,16 +80,17 @@ void triangle(Vec4f *pts, IShader &shader, TGAImage &image, TGAImage &zbuffer){
                 proj<3>(pts[2] / pts[2][3])
             };
             Vec3f baryCoordinate = barycentric(pts_homogeneous, P);
-            
+
             float z = pts[0][2] * baryCoordinate.x  + pts[1][2] * baryCoordinate.y + pts[2][2] * baryCoordinate.z;
             float w = pts[0][3] * baryCoordinate.x + pts[1][3] * baryCoordinate.y + pts[2][3] * baryCoordinate.z;
-            float depth = std::max(0, std::min(255, int(z / w + 0.5f)));
-            if(baryCoordinate.x<0 || baryCoordinate.y<0 || baryCoordinate.z<0 || zbuffer.get(P.x, P.y)[0] > depth) continue;
+            int depth = z / w;
+            int idx = P.x+P.y*image.get_width();
+            if(baryCoordinate.x<0 || baryCoordinate.y<0 || baryCoordinate.z<0 || zbuffer[P.x+P.y*image.get_width()] > depth) continue;
             
             bool discard = shader.fragmentShader(baryCoordinate, color); 
             if(!discard){
                 image.set(P.x, P.y, color);
-                zbuffer.set(P.x, P.y, TGAColor(depth));
+                zbuffer[P.x+P.y*image.get_width()] = depth;
             }
         }
     }
